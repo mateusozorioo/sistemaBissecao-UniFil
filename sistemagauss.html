@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Eliminação Gaussiana</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            color: #4a5568;
+            min-width: 120px;
+        }
+
+        .input-group input {
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .matrix-input {
+            margin: 20px 0;
+        }
+
+        .matrix-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .matrix-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .matrix-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .matrix-table input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .matrix-table input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .step {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .step-matrix {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .step-matrix table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-matrix td {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .multiplier {
+            color: #e53e3e;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .pivot {
+            background: #fed7d7;
+            font-weight: bold;
+        }
+
+        .fraction {
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .input-group label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Eliminação Gaussiana</h1>
+            <p>Resolução de sistemas lineares usando o método de eliminação gaussiana</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="matrixSize">Tamanho da Matriz (N×N):</label>
+                <input type="number" id="matrixSize" min="2" max="10" value="4">
+                <button class="btn" onclick="generateMatrix()">Gerar Matriz</button>
+            </div>
+
+            <div id="matrixInput"></div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="solveSystem()" id="solveBtn" style="display: none;">Resolver Sistema</button>
+            </div>
+        </div>
+
+        <div id="results" class="results-section"></div>
+    </div>
+
+    <script>
+        class Fraction {
+            constructor(numerator, denominator = 1) {
+                if (denominator === 0) {
+                    throw new Error("Denominador não pode ser zero");
+                }
+                
+                this.num = numerator;
+                this.den = denominator;
+                this.simplify();
+            }
+
+            static gcd(a, b) {
+                a = Math.abs(a);
+                b = Math.abs(b);
+                while (b !== 0) {
+                    let temp = b;
+                    b = a % b;
+                    a = temp;
+                }
+                return a;
+            }
+
+            simplify() {
+                if (this.num === 0) {
+                    this.den = 1;
+                    return;
+                }
+                
+                let gcd = Fraction.gcd(this.num, this.den);
+                this.num = this.num / gcd;
+                this.den = this.den / gcd;
+                
+                if (this.den < 0) {
+                    this.num = -this.num;
+                    this.den = -this.den;
+                }
+            }
+
+            add(other) {
+                if (typeof other === 'number') {
+                    other = new Fraction(other);
+                }
+                
+                let newNum = this.num * other.den + other.num * this.den;
+                let newDen = this.den * other.den;
+                return new Fraction(newNum, newDen);
+            }
+
+            multiply(other) {
+                if (typeof other === 'number') {
+                    other = new Fraction(other);
+                }
+                
+                return new Fraction(this.num * other.num, this.den * other.den);
+            }
+
+            divide(other) {
+                if (typeof other === 'number') {
+                    other = new Fraction(other);
+                }
+                
+                return new Fraction(this.num * other.den, this.den * other.num);
+            }
+
+            negate() {
+                return new Fraction(-this.num, this.den);
+            }
+
+            isZero() {
+                return this.num === 0;
+            }
+
+            toString() {
+                if (this.den === 1) {
+                    return this.num.toString();
+                }
+                return `${this.num}/${this.den}`;
+            }
+
+            toDecimal() {
+                return this.num / this.den;
+            }
+        }
+
+        let currentSize = 4;
+        let matrix = [];
+        let constants = [];
+
+        function generateMatrix() {
+            currentSize = parseInt(document.getElementById('matrixSize').value);
+            
+            let html = '<div class="matrix-input">';
+            html += '<h3>Digite os valores da matriz:</h3>';
+            html += '<div class="matrix-table">';
+            html += '<table>';
+            
+            // Cabeçalho
+            html += '<tr><th>Linha</th>';
+            for (let j = 0; j < currentSize; j++) {
+                html += `<th>A${j+1}</th>`;
+            }
+            html += '<th>Resultado</th></tr>';
+            
+            // Linhas da matriz
+            for (let i = 0; i < currentSize; i++) {
+                html += `<tr><td><strong>L${i+1}</strong></td>`;
+                for (let j = 0; j < currentSize; j++) {
+                    html += `<td><input type="number" step="any" id="a${i}${j}" value="${i === j ? 1 : i + j + 1}"></td>`;
+                }
+                html += `<td><input type="number" step="any" id="b${i}" value="${10 - i}"></td></tr>`;
+            }
+            
+            html += '</table>';
+            html += '</div>';
+            html += '</div>';
+            
+            document.getElementById('matrixInput').innerHTML = html;
+            document.getElementById('solveBtn').style.display = 'inline-block';
+        }
+
+        function readMatrix() {
+            matrix = [];
+            constants = [];
+            
+            for (let i = 0; i < currentSize; i++) {
+                matrix[i] = [];
+                for (let j = 0; j < currentSize; j++) {
+                    let value = parseFloat(document.getElementById(`a${i}${j}`).value) || 0;
+                    matrix[i][j] = new Fraction(value);
+                }
+                let constValue = parseFloat(document.getElementById(`b${i}`).value) || 0;
+                constants[i] = new Fraction(constValue);
+            }
+        }
+
+        function findPivot(matrix, constants, currentStep) {
+            for (let i = currentStep; i < matrix.length; i++) {
+                if (!matrix[i][currentStep].isZero()) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function swapRows(matrix, constants, row1, row2) {
+            if (row1 !== row2) {
+                [matrix[row1], matrix[row2]] = [matrix[row2], matrix[row1]];
+                [constants[row1], constants[row2]] = [constants[row2], constants[row1]];
+                return true;
+            }
+            return false;
+        }
+
+        function copyMatrix(matrix) {
+            return matrix.map(row => row.map(val => new Fraction(val.num, val.den)));
+        }
+
+        function copyConstants(constants) {
+            return constants.map(val => new Fraction(val.num, val.den));
+        }
+
+        function solveSystem() {
+            readMatrix();
+            
+            let workMatrix = copyMatrix(matrix);
+            let workConstants = copyConstants(constants);
+            let steps = [];
+            
+            // Etapa inicial
+            steps.push({
+                step: 0,
+                matrix: copyMatrix(workMatrix),
+                constants: copyConstants(workConstants),
+                pivot: null,
+                multipliers: [],
+                swapped: false
+            });
+
+            for (let k = 0; k < currentSize - 1; k++) {
+                let pivotRow = findPivot(workMatrix, workConstants, k);
+                let swapped = false;
+                
+                if (pivotRow === -1) {
+                    alert("Sistema não possui solução única (pivot zero encontrado)");
+                    return;
+                }
+                
+                if (pivotRow !== k) {
+                    swapRows(workMatrix, workConstants, k, pivotRow);
+                    swapped = true;
+                }
+                
+                let pivot = workMatrix[k][k];
+                let multipliers = [];
+                
+                // Calcular multiplicadores
+                for (let i = k + 1; i < currentSize; i++) {
+                    if (!workMatrix[i][k].isZero()) {
+                        let multiplier = workMatrix[i][k].divide(pivot).negate();
+                        multipliers.push({ row: i, multiplier: multiplier });
+                    }
+                }
+                
+                // Aplicar eliminação
+                for (let mult of multipliers) {
+                    let i = mult.row;
+                    let m = mult.multiplier;
+                    
+                    for (let j = 0; j < currentSize; j++) {
+                        workMatrix[i][j] = workMatrix[i][j].add(workMatrix[k][j].multiply(m));
+                    }
+                    workConstants[i] = workConstants[i].add(workConstants[k].multiply(m));
+                }
+                
+                steps.push({
+                    step: k + 1,
+                    matrix: copyMatrix(workMatrix),
+                    constants: copyConstants(workConstants),
+                    pivot: pivot,
+                    multipliers: multipliers,
+                    swapped: swapped,
+                    pivotRow: pivotRow,
+                    currentRow: k
+                });
+            }
+            
+            displayResults(steps);
+        }
+
+        function displayResults(steps) {
+            let html = '<h2>Resolução Passo a Passo</h2>';
+            
+            for (let i = 0; i < steps.length; i++) {
+                let step = steps[i];
+                html += '<div class="step">';
+                
+                if (i === 0) {
+                    html += '<h3>Matriz Original</h3>';
+                } else {
+                    html += `<h3>Etapa k = ${step.step - 1}`;
+                    if (step.pivot) {
+                        html += `, Pivô = ${step.pivot.toString()}`;
+                    }
+                    html += '</h3>';
+                    
+                    if (step.swapped) {
+                        html += `<p style="color: #e53e3e; font-weight: bold;">⚠️ Linhas ${step.currentRow + 1} e ${step.pivotRow + 1} foram trocadas para evitar pivô zero</p>`;
+                    }
+                }
+                
+                html += '<div class="step-matrix">';
+                html += '<table>';
+                
+                for (let row = 0; row < step.matrix.length; row++) {
+                    html += '<tr>';
+                    html += `<td style="font-weight: bold;">L${row + 1}</td>`;
+                    html += '<td>[</td>';
+                    
+                    for (let col = 0; col < step.matrix[row].length; col++) {
+                        let cellClass = '';
+                        if (i > 0 && row === step.currentRow && col === step.currentRow) {
+                            cellClass = 'pivot';
+                        }
+                        html += `<td class="${cellClass}">${step.matrix[row][col].toString()}</td>`;
+                        if (col < step.matrix[row].length - 1) {
+                            html += '<td>+</td>';
+                        }
+                    }
+                    
+                    html += '<td>]</td>';
+                    html += '<td>=</td>';
+                    html += `<td>${step.constants[row].toString()}</td>`;
+                    
+                    // Mostrar multiplicadores
+                    if (i > 0 && step.multipliers.length > 0) {
+                        let mult = step.multipliers.find(m => m.row === row);
+                        if (mult) {
+                            html += `<td class="multiplier">M${row + 1}${step.currentRow + 1} = ${mult.multiplier.toString()}</td>`;
+                        }
+                    }
+                    
+                    html += '</tr>';
+                }
+                
+                html += '</table>';
+                html += '</div>';
+                html += '</div>';
+            }
+            
+            // Mostrar matriz final triangular superior
+            let finalStep = steps[steps.length - 1];
+            html += '<div class="step" style="border-left-color: #38a169; background: #f0fff4;">';
+            html += '<h3>✅ Matriz Triangular Superior Final</h3>';
+            html += '<div class="step-matrix">';
+            html += '<table>';
+            
+            for (let i = 0; i < finalStep.matrix.length; i++) {
+                html += '<tr>';
+                html += `<td style="font-weight: bold;">L${i + 1}</td>`;
+                html += '<td>[</td>';
+                
+                for (let j = 0; j < finalStep.matrix[i].length; j++) {
+                    let value = finalStep.matrix[i][j];
+                    let cellClass = '';
+                    
+                    if (i > j && !value.isZero()) {
+                        cellClass = 'style="background: #fed7d7;"';
+                    } else if (i === j && !value.isZero()) {
+                        cellClass = 'style="background: #c6f6d5; font-weight: bold;"';
+                    } else if (value.isZero()) {
+                        cellClass = 'style="color: #718096;"';
+                    }
+                    
+                    html += `<td ${cellClass}>${value.toString()}</td>`;
+                    if (j < finalStep.matrix[i].length - 1) {
+                        html += '<td>+</td>';
+                    }
+                }
+                
+                html += '<td>]</td>';
+                html += '<td>=</td>';
+                html += `<td style="font-weight: bold;">${finalStep.constants[i].toString()}</td>`;
+                html += '</tr>';
+            }
+            
+            html += '</table>';
+            html += '</div>';
+            html += '<p style="margin-top: 15px; color: #38a169;">Sistema transformado em forma triangular superior! Os elementos abaixo da diagonal principal foram eliminados.</p>';
+            html += '</div>';
+            
+            document.getElementById('results').innerHTML = html;
+        }
+
+        // Gerar matriz inicial
+        window.onload = function() {
+            generateMatrix();
+        };
+    </script>
+</body>
+</html>
