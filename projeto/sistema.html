@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Eliminação Gaussiana</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #4a5568;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            color: #718096;
+            font-size: 1.1em;
+        }
+
+        .input-section {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            font-weight: bold;
+            color: #4a5568;
+            min-width: 120px;
+        }
+
+        .input-group input {
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .matrix-input {
+            margin: 20px 0;
+        }
+
+        .matrix-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+        }
+
+        .matrix-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            padding: 12px;
+            text-align: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .matrix-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+        }
+
+        .matrix-table input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .matrix-table input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .results-section {
+            margin-top: 30px;
+        }
+
+        .step {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+
+        .step h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .step-matrix {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .step-matrix table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'Courier New', monospace;
+        }
+
+        .step-matrix td {
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .multiplier {
+            color: #e53e3e;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .pivot {
+            background: #fed7d7;
+            font-weight: bold;
+        }
+
+        .fraction {
+            font-size: 0.9em;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .input-group label {
+                min-width: auto;
+                margin-bottom: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Sistema de Eliminação Gaussiana</h1>
+            <p>Resolução de sistemas lineares usando o método de eliminação gaussiana</p>
+        </div>
+
+        <div class="input-section">
+            <div class="input-group">
+                <label for="matrixSize">Tamanho da Matriz (N×N):</label>
+                <input type="number" id="matrixSize" min="2" max="10" value="4">
+                <button class="btn" onclick="generateMatrix()">Gerar Matriz</button>
+            </div>
+
+            <div id="matrixInput"></div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="solveSystem()" id="solveBtn" style="display: none;">Resolver Sistema</button>
+            </div>
+        </div>
+
+        <div id="results" class="results-section"></div>
+    </div>
+
+    <!-- Vinculação do arquivo JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

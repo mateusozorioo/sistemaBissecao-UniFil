@@ -417,61 +417,88 @@
             let workConstants = copyConstants(constants);
             let steps = [];
             
-            // Etapa inicial
+            // Etapa inicial (rodada k=0)
             steps.push({
                 step: 0,
                 matrix: copyMatrix(workMatrix),
                 constants: copyConstants(workConstants),
                 pivot: null,
                 multipliers: [],
-                swapped: false
+                swapped: false,
+                description: "Matriz Original"
             });
 
             for (let k = 0; k < currentSize - 1; k++) {
-                let pivotRow = findPivot(workMatrix, workConstants, k);
+                // Determinar o pivô da rodada k (elemento A[k][k])
+                let pivotElement = workMatrix[k][k];
+                
+                // Verificar se precisa trocar linhas
                 let swapped = false;
+                let pivotRow = k;
                 
-                if (pivotRow === -1) {
-                    alert("Sistema não possui solução única (pivot zero encontrado)");
-                    return;
+                if (pivotElement.isZero()) {
+                    // Procurar linha com elemento não-zero na posição k
+                    for (let i = k + 1; i < currentSize; i++) {
+                        if (!workMatrix[i][k].isZero()) {
+                            swapRows(workMatrix, workConstants, k, i);
+                            pivotRow = i;
+                            swapped = true;
+                            pivotElement = workMatrix[k][k];
+                            break;
+                        }
+                    }
+                    
+                    if (pivotElement.isZero()) {
+                        alert("Sistema não possui solução única (pivot zero encontrado)");
+                        return;
+                    }
                 }
                 
-                if (pivotRow !== k) {
-                    swapRows(workMatrix, workConstants, k, pivotRow);
-                    swapped = true;
-                }
-                
-                let pivot = workMatrix[k][k];
                 let multipliers = [];
                 
-                // Calcular multiplicadores
+                // Calcular multiplicadores para as linhas que serão processadas
+                // Na rodada k, processamos linhas k+1, k+2, ..., n-1
                 for (let i = k + 1; i < currentSize; i++) {
-                    if (!workMatrix[i][k].isZero()) {
-                        let multiplier = workMatrix[i][k].divide(pivot).negate();
-                        multipliers.push({ row: i, multiplier: multiplier });
-                    }
+                    // M(i, k+1) = -A(i, k+1) / A(k+1, k+1)
+                    // Em termos de índices base 0: M(i, k) = -A[i][k] / A[k][k]
+                    let multiplier = workMatrix[i][k].divide(pivotElement).negate();
+                    multipliers.push({ row: i, multiplier: multiplier });
                 }
                 
-                // Aplicar eliminação
+                // Criar uma cópia da matriz atual para preservar os valores da rodada k-1
+                let previousMatrix = copyMatrix(workMatrix);
+                let previousConstants = copyConstants(workConstants);
+                
+                // Aplicar a fórmula CORRIGIDA: A(i,j)(rodada k) = A(i,j)(rodada k-1) + A(k+1,j)(rodada k-1) * M(i, k+1)
+                // Processar apenas as linhas k+1 em diante
                 for (let mult of multipliers) {
-                    let i = mult.row;
+                    let i = mult.row; // linha atual
                     let m = mult.multiplier;
                     
+                    // Para cada elemento da linha i
                     for (let j = 0; j < currentSize; j++) {
-                        workMatrix[i][j] = workMatrix[i][j].add(workMatrix[k][j].multiply(m));
+                        // A(i,j)(rodada k) = A(i,j)(rodada k-1) + A(k,j)(rodada k-1) * M
+                        let currentElement = previousMatrix[i][j]; // A(i,j) da rodada k-1
+                        let pivotRowElement = previousMatrix[k][j]; // A(k,j) da rodada k-1 (linha do pivô)
+                        workMatrix[i][j] = currentElement.add(pivotRowElement.multiply(m));
                     }
-                    workConstants[i] = workConstants[i].add(workConstants[k].multiply(m));
+                    
+                    // Aplicar também para as constantes
+                    let currentConstant = previousConstants[i]; // B(i) da rodada k-1
+                    let pivotRowConstant = previousConstants[k]; // B(k) da rodada k-1 (linha do pivô)
+                    workConstants[i] = currentConstant.add(pivotRowConstant.multiply(m));
                 }
                 
                 steps.push({
                     step: k + 1,
                     matrix: copyMatrix(workMatrix),
                     constants: copyConstants(workConstants),
-                    pivot: pivot,
+                    pivot: pivotElement,
                     multipliers: multipliers,
                     swapped: swapped,
                     pivotRow: pivotRow,
-                    currentRow: k
+                    currentRow: k,
+                    description: `Rodada k = ${k + 1}, Pivô = ${pivotElement.toString()}`
                 });
             }
             
@@ -486,16 +513,17 @@
                 html += '<div class="step">';
                 
                 if (i === 0) {
-                    html += '<h3>Matriz Original</h3>';
+                    html += '<h3>Rodada k = 0 (Matriz Original)</h3>';
                 } else {
-                    html += `<h3>Etapa k = ${step.step - 1}`;
-                    if (step.pivot) {
-                        html += `, Pivô = ${step.pivot.toString()}`;
-                    }
-                    html += '</h3>';
+                    html += `<h3>${step.description}</h3>`;
                     
                     if (step.swapped) {
                         html += `<p style="color: #e53e3e; font-weight: bold;">⚠️ Linhas ${step.currentRow + 1} e ${step.pivotRow + 1} foram trocadas para evitar pivô zero</p>`;
+                    }
+                    
+                    // Mostrar a fórmula corrigida
+                    if (step.multipliers.length > 0) {
+                        html += '<p style="margin: 10px 0; color: #4a5568;"><strong>Fórmula aplicada:</strong> A(i,j)(rodada k) = A(i,j)(rodada k-1) + A(k+1,j)(rodada k-1) * M(i, k+1)</p>';
                     }
                 }
                 
@@ -509,9 +537,15 @@
                     
                     for (let col = 0; col < step.matrix[row].length; col++) {
                         let cellClass = '';
+                        // Destacar o pivô
                         if (i > 0 && row === step.currentRow && col === step.currentRow) {
                             cellClass = 'pivot';
                         }
+                        // Destacar elementos zerados
+                        if (step.matrix[row][col].isZero() && row > col) {
+                            cellClass += ' style="color: #38a169; font-weight: bold;"';
+                        }
+                        
                         html += `<td class="${cellClass}">${step.matrix[row][col].toString()}</td>`;
                         if (col < step.matrix[row].length - 1) {
                             html += '<td>+</td>';
@@ -526,7 +560,7 @@
                     if (i > 0 && step.multipliers.length > 0) {
                         let mult = step.multipliers.find(m => m.row === row);
                         if (mult) {
-                            html += `<td class="multiplier">M${row + 1}${step.currentRow + 1} = ${mult.multiplier.toString()}</td>`;
+                            html += `<td class="multiplier">M${row + 1}${step.currentRow + 1} = -A(${row + 1},${step.currentRow + 1})/A(${step.currentRow + 1},${step.currentRow + 1}) = ${mult.multiplier.toString()}</td>`;
                         }
                     }
                     
@@ -535,13 +569,25 @@
                 
                 html += '</table>';
                 html += '</div>';
+                
+                // Mostrar detalhes dos cálculos se não for a primeira rodada
+                if (i > 0 && step.multipliers.length > 0) {
+                    html += '<div style="margin-top: 15px; padding: 10px; background: #edf2f7; border-radius: 5px;">';
+                    html += '<h4>Detalhes dos Cálculos:</h4>';
+                    
+                    for (let mult of step.multipliers) {
+                        html += `<p><strong>Linha ${mult.row + 1}:</strong> Elementos calculados usando A(k+1,j) da Linha ${step.currentRow + 1} (linha do pivô) com multiplicador ${mult.multiplier.toString()}</p>`;
+                    }
+                    html += '</div>';
+                }
+                
                 html += '</div>';
             }
             
             // Mostrar matriz final triangular superior
             let finalStep = steps[steps.length - 1];
             html += '<div class="step" style="border-left-color: #38a169; background: #f0fff4;">';
-            html += '<h3>✅ Matriz Triangular Superior Final</h3>';
+            html += `<h3>✅ Resultado Final - Rodada k = ${finalStep.step}</h3>`;
             html += '<div class="step-matrix">';
             html += '<table>';
             
@@ -559,7 +605,7 @@
                     } else if (i === j && !value.isZero()) {
                         cellClass = 'style="background: #c6f6d5; font-weight: bold;"';
                     } else if (value.isZero()) {
-                        cellClass = 'style="color: #718096;"';
+                        cellClass = 'style="color: #38a169; font-weight: bold;"';
                     }
                     
                     html += `<td ${cellClass}>${value.toString()}</td>`;
@@ -576,7 +622,7 @@
             
             html += '</table>';
             html += '</div>';
-            html += '<p style="margin-top: 15px; color: #38a169;">Sistema transformado em forma triangular superior! Os elementos abaixo da diagonal principal foram eliminados.</p>';
+            html += '<p style="margin-top: 15px; color: #38a169;"><strong>Matriz transformada em forma triangular superior!</strong> Todos os elementos abaixo da diagonal principal foram eliminados usando a fórmula corrigida.</p>';
             html += '</div>';
             
             document.getElementById('results').innerHTML = html;
@@ -586,8 +632,6 @@
         window.onload = function() {
             generateMatrix();
         };
-
-        //Aqui serão feitas as novas modificações
     </script>
 </body>
-</html> 
+</html>
