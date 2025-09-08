@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Método da Bisseção - Detecção Automática</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 20px auto;
+            max-width: 1400px;
+            padding-bottom: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .result-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+
+        .zeros-detection-section {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .iteration-row {
+            animation: fadeIn 0.5s ease-in;
+            border-left: 4px solid #4facfe;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+            margin: 5px;
+        }
+        
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(238, 90, 82, 0.3);
+            color: white;
+        }
+
+        .btn-auto-detect {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+            margin: 5px;
+        }
+        
+        .btn-auto-detect:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(17, 153, 142, 0.3);
+            color: white;
+        }
+        
+        .function-examples {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .final-result {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .error-message {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+        .zero-interval {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border-left: 4px solid #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .zero-interval:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(5px);
+        }
+
+        .zero-interval.selected {
+            background: rgba(255, 255, 255, 0.4);
+            border-left-color: #ffd700;
+        }
+
+        .mode-toggle {
+            background: #fff;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <!-- Botão Voltar para o Menu -->
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Voltar ao Menu
+    </a>
+    
+    <div class="container">
+        <div class="main-container">
+            <div class="header">
+                <h1><i class="fas fa-calculator"></i> Método da Bisseção</h1>
+                <p>Encontre zeros de funções não-lineares com detecção automática</p>
+            </div>
+            
+            <div class="mode-toggle">
+                <h5><i class="fas fa-toggle-on"></i> Modo de Operação</h5>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="operationMode" id="modeAuto" value="auto" checked>
+                    <label class="form-check-label" for="modeAuto">
+                        <strong>Detecção Automática</strong> - O sistema encontra os intervalos com zeros automaticamente
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="operationMode" id="modeManual" value="manual">
+                    <label class="form-check-label" for="modeManual">
+                        <strong>Manual</strong> - Você define os intervalos [a,b] manualmente
+                    </label>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <h4><i class="fas fa-cogs"></i> Configurações</h4>
+                
+                <div class="function-examples">
+                    <strong>Exemplos de funções:</strong>
+                    <ul class="mb-0">
+                        <li><code>x^3 - 9*x + 3</code> (3 zeros possíveis)</li>
+                        <li><code>x^4 - 16</code> (4 zeros possíveis, 2 reais)</li>
+                        <li><code>x^2 - 4</code> (2 zeros reais)</li>
+                        <li><code>Math.cos(x) - x</code> (1 zero)</li>
+                        <li><code>x^3 - 2*x - 5</code> (3 zeros possíveis)</li>
+                    </ul>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="function" class="form-label"><strong>Função f(x):</strong></label>
+                        <input type="text" class="form-control" id="function" placeholder="Ex: x^3 - 9*x + 3" value="">
+                        <div class="form-text">Use: x^2 para x², Math.sin(x), Math.cos(x), Math.exp(x), etc.</div>
+                    </div>
+                    
+                    <div id="manualInputs" class="row" style="display: none;">
+                        <div class="col-md-4 mb-3">
+                            <label for="a" class="form-label"><strong>Ponto inicial (a):</strong></label>
+                            <input type="number" class="form-control" id="a" step="any" value="0">
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="b" class="form-label"><strong>Ponto final (b):</strong></label>
+                            <input type="number" class="form-control" id="b" step="any" value="1">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="tolerance" class="form-label"><strong>Tolerância:</strong></label>
+                        <input type="number" class="form-control" id="tolerance" step="any" value="0.0001">
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="searchRange" class="form-label"><strong>Intervalo de busca:</strong></label>
+                        <input type="number" class="form-control" id="searchRange" step="any" value="30" min="5" max="100">
+                        <div class="form-text">Busca zeros no intervalo [-valor, +valor]</div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label for="stepSize" class="form-label"><strong>Passo de busca:</strong></label>
+                        <select class="form-control" id="stepSize">
+                            <option value="1">1.0 (mais rápido)</option>
+                            <option value="0.5">0.5 (balanceado)</option>
+                            <option value="0.1">0.1 (mais preciso)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button class="btn btn-auto-detect" onclick="detectZeros()">
+                        <i class="fas fa-search"></i> Detectar Zeros Automaticamente
+                    </button>
+                    <button class="btn btn-calculate" onclick="calculateBisection()">
+                        <i class="fas fa-play"></i> Calcular Bisseção
+                    </button>
+                </div>
+            </div>
+            
+            <div id="zerosResults"></div>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script src="bissecao.js"></script>
+</body>
+</html>

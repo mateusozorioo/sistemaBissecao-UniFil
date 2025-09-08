@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Eliminação Gaussiana</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -203,6 +204,36 @@
             font-size: 1.2em;
         }
 
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            z-index: 1000;
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+        
+        .back-button:active {
+            transform: translateY(0);
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -221,10 +252,21 @@
                 min-width: auto;
                 margin-bottom: 5px;
             }
+            
+            .back-button {
+                position: relative;
+                margin-bottom: 20px;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Botão Voltar para o Menu -->
+    <a href="index.html" class="back-button">
+        <i class="fas fa-arrow-left"></i> Voltar ao Menu
+    </a>
+    
     <div class="container">
         <div class="header">
             <h1>Sistema de Eliminação Gaussiana</h1>
@@ -249,6 +291,6 @@
     </div>
 
     <!-- Vinculação do arquivo JavaScript -->
-    <script src="script.js"></script>
+    <script src="gauss.js"></script>
 </body>
 </html>

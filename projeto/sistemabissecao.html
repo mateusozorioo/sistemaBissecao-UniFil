@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Método da Bisseção</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin: 210px auto;
+            max-width: 1200px;
+            padding-bottom: 5px;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px 20px 0 0;
+            text-align: center;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .result-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .iteration-row {
+            animation: fadeIn 0.5s ease-in;
+            border-left: 4px solid #4facfe;
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .btn-calculate {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            color: white;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        .btn-calculate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(238, 90, 82, 0.3);
+            color: white;
+        }
+        
+        .function-examples {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            
+        }
+        
+        .final-result {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .error-message {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-container">
+            <div class="header">
+                <h1><i class="fas fa-calculator"></i> Método da Bisseção</h1>
+                <p>Encontre zeros de funções não-lineares de forma interativa</p>
+            </div>
+            
+            <div class="input-section">
+                <h4><i class="fas fa-cogs"></i> Configurações</h4>
+                
+                <div class="function-examples">
+                    <strong>Exemplos de funções:</strong>
+                    <ul class="mb-0">
+                        <li><code>x^3 - 9*x + 3</code></li>
+                        <li><code>x^2 - 4</code></li>
+                        <li><code>Math.cos(x) - x</code></li>
+                        <li><code>x^3 - 2*x - 5</code></li>
+                    </ul>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12 mb-3">
+                        <label for="function" class="form-label"><strong>Função f(x):</strong></label>
+                        <input type="text" class="form-control" id="function" placeholder="Ex: x^3 - 9*x + 3" value="x^3 - 9*x + 3">
+                        <div class="form-text">Use: x^2 para x², Math.sin(x), Math.cos(x), Math.exp(x), etc.</div>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="a" class="form-label"><strong>Ponto inicial (a):</strong></label>
+                        <input type="number" class="form-control" id="a" step="any" value="0">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="b" class="form-label"><strong>Ponto final (b):</strong></label>
+                        <input type="number" class="form-control" id="b" step="any" value="1">
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="tolerance" class="form-label"><strong>Tolerância:</strong></label>
+                        <input type="number" class="form-control" id="tolerance" step="any" value="0.0001">
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button class="btn btn-calculate" onclick="calculateBisection()">
+                        <i class="fas fa-play"></i> Calcular
+                    </button>
+                </div>
+            </div>
+            
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Função para avaliar a expressão matemática
+        function evaluateFunction(expression, x) {
+            // Substitui ^ por ** para potências
+            let func = expression.replace(/\^/g, '**');
+            
+            // Substitui x pela variável
+            func = func.replace(/x/g, x.toString());
+            
+            try {
+                return eval(func);
+            } catch (error) {
+                throw new Error('Erro na função: ' + error.message);
+            }
+        }
+        
+        // Função principal do Método da Bisseção
+        function bisectionMethod(funcExpression, a, b, tolerance, maxIterations = 100) {
+            const iterations = [];
+            let iteration = 0;
+            
+            // Verifica se f(a) e f(b) têm sinais opostos
+            const fa = evaluateFunction(funcExpression, a);
+            const fb = evaluateFunction(funcExpression, b);
+            
+            if (fa * fb > 0) {
+                throw new Error('f(a) e f(b) devem ter sinais opostos para garantir que existe uma raiz no intervalo [a,b]');
+            }
+            
+            let currentA = a;
+            let currentB = b;
+            
+            while (iteration < maxIterations) {
+                iteration++;
+                
+                // Calcula o ponto médio
+                const c = (currentA + currentB) / 2;
+                const fc = evaluateFunction(funcExpression, c);
+                
+                // Adiciona informações da iteração
+                iterations.push({
+                    iteration: iteration,
+                    a: currentA,
+                    b: currentB,
+                    c: c,
+                    fa: evaluateFunction(funcExpression, currentA),
+                    fb: evaluateFunction(funcExpression, currentB),
+                    fc: fc,
+                    error: Math.abs(currentB - currentA)
+                });
+                
+                // Determina o novo intervalo ANTES de verificar convergência
+                const faNew = evaluateFunction(funcExpression, currentA);
+                if (faNew * fc < 0) {
+                    currentB = c;
+                } else {
+                    currentA = c;
+                }
+                
+                // Verifica convergência APÓS atualizar o intervalo
+                // Usa apenas o critério do erro absoluto em f(c)
+                if (Math.abs(fc) < tolerance) {
+                    return {
+                        root: c,
+                        iterations: iterations,
+                        converged: true,
+                        finalError: Math.abs(fc)
+                    };
+                }
+            }
+            
+            return {
+                root: (currentA + currentB) / 2,
+                iterations: iterations,
+                converged: false,
+                finalError: Math.abs(evaluateFunction(funcExpression, (currentA + currentB) / 2))
+            };
+        }
+        
+        function calculateBisection() {
+            const resultsDiv = document.getElementById('results');
+            
+            try {
+                const funcExpression = document.getElementById('function').value;
+                const a = parseFloat(document.getElementById('a').value);
+                const b = parseFloat(document.getElementById('b').value);
+                const tolerance = parseFloat(document.getElementById('tolerance').value);
+                
+                if (!funcExpression) {
+                    throw new Error('Por favor, insira uma função');
+                }
+                
+                if (isNaN(a) || isNaN(b) || isNaN(tolerance)) {
+                    throw new Error('Por favor, insira valores numéricos válidos');
+                }
+                
+                if (a >= b) {
+                    throw new Error('O valor de "a" deve ser menor que "b"');
+                }
+                
+                const result = bisectionMethod(funcExpression, a, b, tolerance);
+                
+                let html = '<div class="result-section">';
+                html += '<h4><i class="fas fa-chart-line"></i> Resultados</h4>';
+                
+                if (result.converged) {
+                    html += '<div class="final-result">';
+                    html += `<h5><i class="fas fa-bullseye"></i> Raiz encontrada!</h5>`;
+                    html += `<p><strong>x ≈ ${result.root.toFixed(8)}</strong></p>`;
+                    html += `<p>f(${result.root.toFixed(8)}) ≈ ${result.finalError.toFixed(10)}</p>`;
+                    html += `<p>Iterações: ${result.iterations.length}</p>`;
+                    html += '</div>';
+                } else {
+                    html += '<div class="alert alert-warning">';
+                    html += '<h5><i class="fas fa-exclamation-triangle"></i> Máximo de iterações atingido</h5>';
+                    html += `<p>Melhor aproximação: x ≈ ${result.root.toFixed(8)}</p>`;
+                    html += `<p>Erro: ${result.finalError.toFixed(10)}</p>`;
+                    html += '</div>';
+                }
+                
+                // Tabela de iterações
+                html += '<h5 class="mt-4"><i class="fas fa-table"></i> Histórico de Iterações</h5>';
+                html += '<div class="table-responsive">';
+                html += '<table class="table table-sm table-hover">';
+                html += '<thead><tr><th>Iter</th><th>a</th><th>b</th><th>c</th><th>f(a)</th><th>f(b)</th><th>f(c)</th><th>Erro</th></tr></thead><tbody>';
+                
+                result.iterations.forEach((iter, index) => {
+                    html += `<tr class="iteration-row" style="animation-delay: ${index * 0.1}s">`;
+                    html += `<td>${iter.iteration}</td>`;
+                    html += `<td>${iter.a.toFixed(6)}</td>`;
+                    html += `<td>${iter.b.toFixed(6)}</td>`;
+                    html += `<td>${iter.c.toFixed(6)}</td>`;
+                    html += `<td>${iter.fa.toFixed(6)}</td>`;
+                    html += `<td>${iter.fb.toFixed(6)}</td>`;
+                    html += `<td>${iter.fc.toFixed(6)}</td>`;
+                    html += `<td>${iter.error.toFixed(8)}</td>`;
+                    html += '</tr>';
+                });
+                
+                html += '</tbody></table></div>';
+                html += '</div>';
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i> <strong>Erro:</strong> ${error.message}</div>`;
+            }
+        }
+        
+        // Permite calcular pressionando Enter
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                calculateBisection();
+            }
+        });
+        
+        // Calcula automaticamente com o exemplo inicial
+        window.addEventListener('load', function() {
+            setTimeout(calculateBisection, 500);
+        });
+    </script>
+</body>
+</html>
